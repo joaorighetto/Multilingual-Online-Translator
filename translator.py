@@ -13,25 +13,38 @@ elif target_language == "en":
     url = f"https://context.reverso.net/translation/french-english/{word_to_translate}"
 else:
     print("Please choose 'fr' or 'en'.")
+
 headers = {'User-Agent': 'Mozilla/5.0'}
 page = requests.get(url, headers=headers)
 status = page.status_code
 if status == 200:
-    print(f"{status} OK")
-    print("Translations")
-    soup = BeautifulSoup(page.content, "html.parser")
+    print(f"{status} OK\n")
 
+    soup = BeautifulSoup(page.content, "html.parser")
+    if target_language == "fr":
+        print("French Translations:")
+    elif target_language == "en":
+        print("English Translations:")
     words = []
     for word in soup.find_all(class_="display-term"):
         words.append(word.text)
-    print(words)
+    for word in words:
+        print(word)
 
-    phrases = []
+    print()
+
+    if target_language == "fr":
+        print("French Examples:")
+    elif target_language == "en":
+        print("English Examples:")
+    examples = []
     section = soup.find("section", {"id": "examples-content"})
     for div in section.find_all("div", {"class": "example"}):
         for span in div.find_all("span", {"class": "text"}):
-            phrases.append(span.text.strip())
-    print(phrases)
-
+            examples.append(span.text.strip())
+    for i in range(0, len(examples), 2):
+        print(examples[i])
+        print(examples[i+1])
+        print()
 else:
     print(f"Error {page.status_code}, try again.")
