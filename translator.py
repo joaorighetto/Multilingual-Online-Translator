@@ -1,30 +1,28 @@
 import requests
 from bs4 import BeautifulSoup
 
-target_language = input('Type "en" if you want to translate from French into English, or "fr" if you want to translate from English into French:')
-word_to_translate = input('Type the word you want to translate:')
 
-print(f'You chose "{target_language}" as a language to translate "{word_to_translate}".')
+supported_languages = {1: "Arabic", 2: "German", 3: "English", 4: "Spanish", 5: "French", 6: "Hebrew", 7: "Japanese",
+                       8: "Dutch", 9: "Polish", 10: "Portuguese", 11: "Romanian", 12: "Russian", 13: "Turkish"}
+
+print("Hello, welcome to the translator. Translator supports:")
+for key, pair in supported_languages.items():
+    print(f"{key}. {pair}")
+
+language_from = int(input("Type the number of your language:"))
+language_to = int(input("Type the number of language you want to translate to:"))
+word_to_translate = input("Type the word you want to translate:")
 
 
-if target_language == "fr":
-    url = f"https://context.reverso.net/translation/english-french/{word_to_translate}"
-elif target_language == "en":
-    url = f"https://context.reverso.net/translation/french-english/{word_to_translate}"
-else:
-    print("Please choose 'fr' or 'en'.")
+url = f"https://context.reverso.net/translation/{supported_languages[language_from].casefold()}-{supported_languages[language_to].casefold()}/{word_to_translate}"
 
 headers = {'User-Agent': 'Mozilla/5.0'}
 page = requests.get(url, headers=headers)
-status = page.status_code
-if status == 200:
-    print(f"{status} OK\n")
+
+if page.status_code == 200:
 
     soup = BeautifulSoup(page.content, "html.parser")
-    if target_language == "fr":
-        print("French Translations:")
-    elif target_language == "en":
-        print("English Translations:")
+    print(f"{supported_languages[language_to]} Translations:")
     words = []
     for word in soup.find_all(class_="display-term"):
         words.append(word.text)
@@ -33,10 +31,7 @@ if status == 200:
 
     print()
 
-    if target_language == "fr":
-        print("French Examples:")
-    elif target_language == "en":
-        print("English Examples:")
+    print(f"{supported_languages[language_to]} Examples:")
     examples = []
     section = soup.find("section", {"id": "examples-content"})
     for div in section.find_all("div", {"class": "example"}):
