@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import argparse
 
 
 def find_translations(soup_obj):
@@ -27,46 +28,53 @@ def make_soup(link):
     return s
 
 
-supported_languages = {1: "Arabic", 2: "German", 3: "English", 4: "Spanish", 5: "French", 6: "Hebrew", 7: "Japanese",
-                       8: "Dutch", 9: "Polish", 10: "Portuguese", 11: "Romanian", 12: "Russian", 13: "Turkish"}
+parser = argparse.ArgumentParser()
+parser.add_argument("language_from")
+parser.add_argument("language_to")
+parser.add_argument("word_to_translate")
 
-print("Hello, welcome to the translator. Translator supports:")
-for key, pair in supported_languages.items():
-    print(f"{key}. {pair}")
+args = parser.parse_args()
 
-language_from = int(input("Type the number of your language:"))
-language_to = int(input("Type the number of a language you want to translate to or '0' to translate to all languages:"))
-word_to_translate = input("Type the word you want to translate:")
+supported_languages = ["arabic", "german", "english", "spanish", "french", "hebrew", "japanese",
+                       "dutch", "polish", "portuguese", "romanian", "russian", "turkish"]
 
-if language_to == 0:
+
+language_from = args.language_from
+language_to = args.language_to
+word_to_translate = args.word_to_translate
+
+if language_to == "all":  # translate to all languages available
     with open(f"{word_to_translate}.txt", "w") as file:
-        for target_language in supported_languages.values():
-            if target_language != supported_languages[language_from]:
+        for target_language in supported_languages:
+            if target_language != language_from:
 
-                url = f"https://context.reverso.net/translation/{supported_languages[language_from].casefold()}-" \
-                      f"{target_language.casefold()}/{word_to_translate}"
+                url = f"https://context.reverso.net/translation/" \
+                      f"{language_from}-{target_language}/" \
+                      f"{word_to_translate}"
 
                 soup = make_soup(url)
 
                 translations = find_translations(soup)
                 examples = find_examples(soup)
-
+                target_language = target_language.capitalize()
                 print(f"{target_language} Translations:\n{translations[0]}\n")
                 print(f"{target_language} Examples:\n{examples[0]}\n{examples[1]}\n")
 
                 file.write(f"{target_language} Translations:\n{translations[0]}\n\n")
                 file.write(f"{target_language} Examples:\n{examples[0]}\n{examples[1]}\n\n")
 
-else:
-    url = f"https://context.reverso.net/translation/{supported_languages[language_from].casefold()}-" \
-          f"{supported_languages[language_to].casefold()}/{word_to_translate}"
+else:  # translate to desired language
+    url = f"https://context.reverso.net/translation/" \
+          f"{language_from}-{language_to}/" \
+          f"{word_to_translate}"
+
     soup = make_soup(url)
     with open(f"{word_to_translate}.txt", "w") as file:
-
-        print(f"{supported_languages[language_to]} Translations:")
+        language_to = language_to.capitalize()
+        print(f"{language_to} Translations:")
         translations = find_translations(soup)
 
-        file.write(f"{supported_languages[language_to]} Translations:\n")
+        file.write(f"{language_to} Translations:\n")
         file.write("\n".join(translations))
         file.write("\n\n")
 
@@ -75,9 +83,9 @@ else:
 
         print()
 
-        file.write(f"{supported_languages[language_to]} Examples:\n")
+        file.write(f"{language_to} Examples:\n")
 
-        print(f"{supported_languages[language_to]} Examples:")
+        print(f"{language_to} Examples:")
         examples = find_examples(soup)
         for i in range(0, len(examples), 2):
             print(f"{examples[i]}\n{examples[i+1]}\n")
@@ -85,9 +93,3 @@ else:
             file.write("\n")
             file.write(examples[i+1])
             file.write("\n\n")
-
-
-
-
-
-
