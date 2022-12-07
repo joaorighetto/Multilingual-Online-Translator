@@ -7,7 +7,11 @@ def find_translations(soup_obj):
     translations_ = []
     for translation_ in soup_obj.find_all(class_="display-term"):
         translations_.append(translation_.text)
-    return translations_
+    if len(translations_) > 0:
+        return translations_
+    else:
+        print(f"Sorry, unable to find {word_to_translate}")
+        quit()
 
 
 def find_examples(soup_obj):
@@ -24,6 +28,7 @@ def make_soup(link):
     try:
         s = BeautifulSoup(r.content, "html.parser")
     except requests.exceptions.RequestException as e:
+        print("Something wrong with your internet connection")
         raise SystemExit(e)
     return s
 
@@ -36,14 +41,22 @@ parser.add_argument("word_to_translate")
 args = parser.parse_args()
 
 supported_languages = ["arabic", "german", "english", "spanish", "french", "hebrew", "japanese",
-                       "dutch", "polish", "portuguese", "romanian", "russian", "turkish"]
+                       "dutch", "polish", "portuguese", "romanian", "russian", "turkish", "all"]
 
 
 language_from = args.language_from
 language_to = args.language_to
 word_to_translate = args.word_to_translate
 
-if language_to == "all":  # translate to all languages available
+
+if language_to not in supported_languages:
+    print(f"Sorry, the program doesn't support {language_to}")
+    quit()
+elif language_from not in supported_languages:
+    print(f"Sorry, the program doesn't support {language_from}")
+    quit()
+# try:
+elif language_to == "all":  # translate to all languages available
     with open(f"{word_to_translate}.txt", "w") as file:
         for target_language in supported_languages:
             if target_language != language_from:
@@ -69,27 +82,38 @@ else:  # translate to desired language
           f"{word_to_translate}"
 
     soup = make_soup(url)
+    translations = find_translations(soup)
+    examples = find_examples(soup)
+
+    print(f"{language_to} Translations:")
+    for translation in translations:
+        print(translation)
+
+    print()
+
+    print(f"{language_to} Examples:")
+    for i in range(0, len(examples), 2):
+        print(f"{examples[i]}\n{examples[i+1]}\n")
+
     with open(f"{word_to_translate}.txt", "w") as file:
         language_to = language_to.capitalize()
-        print(f"{language_to} Translations:")
-        translations = find_translations(soup)
 
         file.write(f"{language_to} Translations:\n")
         file.write("\n".join(translations))
         file.write("\n\n")
 
-        for translation in translations:
-            print(translation)
-
-        print()
-
         file.write(f"{language_to} Examples:\n")
-
-        print(f"{language_to} Examples:")
-        examples = find_examples(soup)
         for i in range(0, len(examples), 2):
-            print(f"{examples[i]}\n{examples[i+1]}\n")
             file.write(examples[i])
             file.write("\n")
             file.write(examples[i+1])
             file.write("\n\n")
+
+
+
+
+
+
+
+# except Exception as e:
+#     print(type(e))
